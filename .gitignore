@@ -29,8 +29,6 @@ build/
 *.sqlite
 *.sqlite3
 *.db
-data/
-!data/*.xlsx
 
 # Logs
 logs/
