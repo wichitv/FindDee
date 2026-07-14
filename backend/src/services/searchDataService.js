@@ -296,9 +296,26 @@ const loadDocuments = async () => {
       ...(row.remainingBalance != null && { remainingBalance: Number(row.remainingBalance) }),
       ...(row.transactionNo != null && { transactionNo: Number(row.transactionNo) }),
       ...(row.assignee && { assignee: row.assignee }),
-      // Buyer Check: Col C = Buyer Name, Col D = Expiry Date
+      // SANCTION (สินค้า): Col A=ลำดับ, Col B=บริษัท(→customer), Col C=Type, Col D=ชื่อสินค้า, Col E=รหัสสินค้า 1, Col F=รหัสสินค้า 2
+      ...(row['ลำดับ'] != null && row['ลำดับ'] !== '' && { sanctionSeq: String(row['ลำดับ']) }),
+      ...(row['Type'] != null && row['Type'] !== '' && { sanctionType: String(row['Type']) }),
+      ...(row['ชื่อสินค้า (Match Phrases)'] != null && row['ชื่อสินค้า (Match Phrases)'] !== '' && { sanctionProduct: String(row['ชื่อสินค้า (Match Phrases)']) }),
+      ...(row['รหัสสินค้า 1'] != null && row['รหัสสินค้า 1'] !== '' && { sanctionCode1: String(row['รหัสสินค้า 1']) }),
+      ...(row['รหัสสินค้า 2'] != null && row['รหัสสินค้า 2'] !== '' && { sanctionCode2: String(row['รหัสสินค้า 2']) }),
+      // CWS: Col A=รหัส, Col B=ชื่อลูกค้า(→customer), Col C=ขนาดธุรกิจ, Col D=วงเงินสะสมรวม, Col E=Credit Warning Sign, Col F=Watch List
+      ...(row['ขนาดธุรกิจ'] != null && row['ขนาดธุรกิจ'] !== '' && { cwsBusinessSize: String(row['ขนาดธุรกิจ']) }),
+      ...(row['วงเงินสะสมรวม'] != null && row['วงเงินสะสมรวม'] !== '' && { cwsCreditLimit: String(row['วงเงินสะสมรวม']) }),
+      ...(row['Credit Warning Sign'] != null && row['Credit Warning Sign'] !== '' && { cwsWarningSign: String(row['Credit Warning Sign']) }),
+      ...(row['Watch List'] != null && row['Watch List'] !== '' && { cwsWatchList: String(row['Watch List']) }),
+      // Buyer Check: Col A=Cus ID, Col B=Customer Name(→customer), Col C=Buyer Name, Col D=Expiry Date
+      ...(row['Cus ID'] != null && row['Cus ID'] !== '' && { cusId: String(row['Cus ID']) }),
       ...(row['Buyer Name'] && { buyerName: String(row['Buyer Name']) }),
-      ...(row['Expiry Date'] != null && row['Expiry Date'] !== '' && { expiryDate: row['Expiry Date'] }),
+      ...(row['Expiry Date'] != null && row['Expiry Date'] !== '' && {
+        // แปลง Excel date serial number → ISO date string (46474 → "2027-03-05")
+        expiryDate: typeof row['Expiry Date'] === 'number'
+          ? new Date((row['Expiry Date'] - 25569) * 86400 * 1000).toISOString().slice(0, 10)
+          : row['Expiry Date'],
+      }),
       _sheetName: row._sheetName || '',
       _fileName: row._fileName || '',
       _rawData,
@@ -317,11 +334,14 @@ const loadDocuments = async () => {
 
 // Mapping: search field → Excel column names ที่ต้องค้นหา
 const FIELD_COLUMN_MAP = {
-  customerCode: ['Cus ID', 'รหัส'],                  // Buyer Check Col A, CWS Col A
+  customerCode: ['Cus ID'],                              // Buyer Check Col A เท่านั้น
   customerName: ['Customer Name', 'ชื่อลูกค้า', 'บริษัท'],  // Col B ทุก sheet
-  port:         ['ท่าเรือปลายทาง'],                   // SANCTION (เรือ) Col D
-  country:      ['รหัสประเทศ'],                    // ท่าเรือปลายทาง
+  port:         ['ท่าเรือปลายทาง'],                         // SANCTION (เรือ) Col D
+  country:      ['รหัสประเทศ'],                             // ท่าเรือปลายทาง
 };
+
+// Mapping เพิ่มเติม: รหัสลูกค้า CWS (Col A ของ CWS sheet)
+const CWS_CODE_COLS = ['รหัส'];
 
 // Helper: ค้นหาค่าเฉพาะ column ที่กำหนดใน FIELD_COLUMN_MAP (case-insensitive)
 const matchField = (rawData, fieldName, value) => {
@@ -366,8 +386,19 @@ export const searchDocuments = async (query = '', filters = {}) => {
     const hasFieldFilter = customerCode || customerName || port || country;
     let matchesFields = true;
     if (hasFieldFilter) {
+      // customerCode ค้นหา Buyer Check Col A (Cus ID) และ CWS Col A (รหัส) แยกกัน
+      const matchesCusId = customerCode
+        ? matchField(doc._rawData, 'customerCode', customerCode)
+        : false;
+      const matchesCwsCode = customerCode
+        ? CWS_CODE_COLS.some(col => {
+            const v = doc._rawData?.[col];
+            return v !== undefined && String(v).toLowerCase().includes(String(customerCode).trim().toLowerCase());
+          })
+        : false;
+
       matchesFields = (
-        (customerCode ? matchField(doc._rawData, 'customerCode', customerCode) : false) ||
+        matchesCusId || matchesCwsCode ||
         (customerName ? matchField(doc._rawData, 'customerName', customerName) : false) ||
         (port         ? matchField(doc._rawData, 'port',         port)         : false) ||
         (country      ? matchField(doc._rawData, 'country',      country)      : false)
@@ -401,7 +432,35 @@ export const searchDocuments = async (query = '', filters = {}) => {
     });
   }
 
-  return allResults.map((doc) => ({ ...doc }));
+  // ─── Step 4: Group Buyer Check rows ที่มี cusId เดียวกัน → buyerList[] ────────
+  const buyerCheckMap = new Map(); // key → merged doc index in finalResults
+  const finalResults = [];
+
+  allResults.forEach((doc) => {
+    if (doc._sheetName !== 'Buyer Check') {
+      finalResults.push({ ...doc });
+      return;
+    }
+    // Buyer Check: group by cusId (fallback to customer name)
+    const key = doc.cusId || doc.customer || doc.id;
+    if (!buyerCheckMap.has(key)) {
+      const merged = { ...doc, buyerList: [] };
+      // เพิ่ม buyer ตัวแรกเข้า list
+      if (doc.buyerName || doc.expiryDate) {
+        merged.buyerList.push({ buyerName: doc.buyerName || '', expiryDate: doc.expiryDate || '' });
+      }
+      buyerCheckMap.set(key, finalResults.length);
+      finalResults.push(merged);
+    } else {
+      // เพิ่ม buyer เพิ่มเติมเข้า list ของ card เดิม
+      const idx = buyerCheckMap.get(key);
+      if (doc.buyerName || doc.expiryDate) {
+        finalResults[idx].buyerList.push({ buyerName: doc.buyerName || '', expiryDate: doc.expiryDate || '' });
+      }
+    }
+  });
+
+  return finalResults;
 };
 
 export const getTrendingSearches = async () => {
