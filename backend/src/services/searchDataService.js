@@ -8,7 +8,7 @@ import { buildAutoSummary } from './summaryService.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const dataDir = path.join(__dirname, '..', '..', 'data');
+const dataDir = path.join(__dirname, '..', '..', '..', 'data');
 const FALLBACK_FILE = path.join(dataDir, 'Invoice_Overdue_Template.xlsx');
 const EXCEL_EXTS = new Set(['.xlsx', '.xls', '.xlsm', '.xlsb']);
 const JSON_FILE = path.join(dataDir, 'invoice_overdue_data.json');
