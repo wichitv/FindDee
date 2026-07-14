@@ -3,7 +3,8 @@ import { useState } from 'react';
 import searchService from '../services/searchService';
 
 const getDocumentStatus = (doc) => {
-  const hasKeyFields = (doc.customer || doc.invoiceNumber) && Number(doc.amount) > 0;
+  // ถ้าไม่มีข้อมูลบริษัท/หมายเลข แต่มี _sheetName — ถือว่ามีข้อมูลจาก Excel
+  const hasKeyFields = (doc.customer || doc.invoiceNumber) || doc._sheetName;
   if (!hasKeyFields) {
     return { label: 'ไม่มีข้อมูลเพียงพอ', icon: '❓', bg: 'bg-gray-100', text: 'text-gray-500', border: 'border-gray-300' };
   }
@@ -129,6 +130,24 @@ export default function DocumentCard({ document, onSave, onShare }) {
                 Number(document.remainingBalance) < Number(document.creditLimit) * 0.2 ? 'text-amber-600' :
                 'text-emerald-700'
               }`}>{Number(document.remainingBalance).toLocaleString('th-TH')}</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Buyer Check: Buyer Name (Col C) + Expiry Date (Col D) */}
+      {(document.buyerName || document.expiryDate) && (
+        <div className="grid grid-cols-2 gap-3 rounded-xl border border-[#D9E8F7] bg-[#F7FAFD] px-4 py-3">
+          {document.buyerName && (
+            <div>
+              <p className="text-xs text-slate-400">Buyer Name</p>
+              <p className="mt-0.5 text-sm font-semibold text-slate-700">{document.buyerName}</p>
+            </div>
+          )}
+          {document.expiryDate && (
+            <div>
+              <p className="text-xs text-slate-400">Expiry Date</p>
+              <p className="mt-0.5 text-sm font-semibold text-slate-700">{formatDate(document.expiryDate)}</p>
             </div>
           )}
         </div>

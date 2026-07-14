@@ -20,20 +20,26 @@ const buildSearchResults = async (query = '', filters = {}) => {
 
 export const search = async (req, res) => {
   try {
-    const { q, filters } = req.query;
+    const { q, filters, customerCode, customerName, port, country, ...extraFields } = req.query;
 
-    if (!q) {
-      return res.status(400).json({ success: false, error: 'Query is required' });
+    // ต้องมี field อย่างน้อย 1 อัน
+    const hasAnyField = q || customerCode || customerName || port || country;
+    if (!hasAnyField) {
+      return res.status(400).json({ success: false, error: 'กรุณากรอกข้อมูลค้นหาอย่างน้อย 1 ช่อง' });
     }
 
-    const results = await buildSearchResults(q, filters);
+    const fieldFilters = { customerCode, customerName, port, country };
+    const normalizedFilters = { ...normalizeFilters(filters), ...fieldFilters };
+
+    const results = await searchDocuments(q || '', normalizedFilters);
 
     res.json({
       success: true,
       results,
       total: results.length,
-      query: q,
-      filters: normalizeFilters(filters)
+      query: q || '',
+      fields: { customerCode, customerName, port, country },
+      filters: normalizedFilters
     });
   } catch (error) {
     console.error('Search error:', error);

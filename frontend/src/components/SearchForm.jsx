@@ -23,14 +23,12 @@ export default function SearchForm({ onSearch, isLoading }) {
     setTouched((prev) => ({ ...prev, [field]: true }));
   };
 
-  const isInvalid = (field) => touched[field] && !values[field].trim();
+  const isInvalid = (field) => false; // ไม่เฎีย field ใด field หนึ่ง
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const allTouched = Object.fromEntries(FIELDS.map(({ key }) => [key, true]));
-    setTouched(allTouched);
-    const allFilled = FIELDS.every(({ key }) => values[key].trim());
-    if (!allFilled) return;
+    const anyFilled = FIELDS.some(({ key }) => values[key].trim());
+    if (!anyFilled) return; // ต้องกรอกอย่างน้อย 1 ช่อง
     onSearch({ ...values });
   };
 
@@ -46,7 +44,7 @@ export default function SearchForm({ onSearch, isLoading }) {
           {FIELDS.map(({ key, label, placeholder }) => (
             <div key={key}>
               <label htmlFor={key} className="mb-1.5 block text-sm font-medium text-slate-700">
-                {label} <span className="text-red-500">*</span>
+                {label}
               </label>
               <input
                 id={key}

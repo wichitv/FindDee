@@ -18,13 +18,18 @@ const normalizeResponse = (payload) => {
 
 const searchService = {
   // Search documents
+  // queryObj รองรับทั้ง string และ object (customerCode, customerName, port, country, ...)
   search: async (queryObj, filters = {}) => {
     try {
+      // ส่ง field แยกโดยตรง เพื่อให้ backend ทำ OR logic ต่อ field
+      const fieldParams = typeof queryObj === 'string'
+        ? { q: queryObj }
+        : Object.fromEntries(
+            Object.entries(queryObj || {}).filter(([, v]) => String(v || '').trim())
+          );
+
       const response = await axios.get(`${API_BASE_URL}/search`, {
-        params: {
-          ...queryObj,
-          ...filters
-        }
+        params: { ...fieldParams, ...filters }
       });
       return normalizeResponse(response.data);
     } catch (error) {
