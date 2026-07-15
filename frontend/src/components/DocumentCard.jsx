@@ -95,6 +95,8 @@ export default function DocumentCard({ document, onSave, onShare }) {
   const hasBuyer = document._sheetName === 'Buyer Check' || !!(document.buyerList?.length || document.buyerName || document.expiryDate);
   const hasCWS = !!(document.cwsBusinessSize || document.cwsCreditLimit || document.cwsWarningSign || document.cwsWatchList);
   const hasSanctionGoods = document._sheetName === 'SANCTION (สินค้า)' && !!(document.sanctionType || document.sanctionProduct || document.sanctionCode1 || document.sanctionCode2);
+  const hasPortDest = document._sheetName === 'ท่าเรือปลายทาง' && !!(document.portDestType || document.portDestRiskLevel || document.portDestFreeze || document.portDestCountryCode);
+  const hasSanctionShip = document._sheetName === 'SANCTION (เรือ)';
   const descText = document.description || document.summary || document.content;
 
   return (
@@ -365,7 +367,91 @@ export default function DocumentCard({ document, onSave, onShare }) {
           </div>
         )}
 
-        {/* ── SECTION 7 : AI สรุป ── */}
+        {/* ── SECTION 6b : SANCTION (เรือ) ── */}
+        {hasSanctionShip && (
+          <div className="rounded-xl border border-orange-200 bg-orange-50/40 overflow-hidden">
+            <div className="flex items-center gap-2 border-b border-orange-200 px-5 py-2.5 bg-orange-100">
+              <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-orange-600 text-white text-[10px] font-black">S</span>
+              <span className="text-sm font-bold text-orange-800">SANCTION (เรือ)</span>
+              <span className="ml-auto text-xs font-medium text-orange-500">แหล่งข้อมูล: SANCTION (เรือ)</span>
+            </div>
+            <div className="grid grid-cols-2 gap-3 px-5 py-4">
+              {document.sanctionSeq && (
+                <div className="rounded-lg border border-orange-100 bg-white px-4 py-3">
+                  <p className="text-xs font-medium text-orange-400 uppercase tracking-wide mb-1">Col A · ลำดับ</p>
+                  <p className="text-base font-bold text-orange-900">{document.sanctionSeq}</p>
+                </div>
+              )}
+              {document.customer && (
+                <div className="rounded-lg border border-orange-100 bg-white px-4 py-3">
+                  <p className="text-xs font-medium text-orange-400 uppercase tracking-wide mb-1">Col B · บริษัท</p>
+                  <p className="text-base font-semibold text-slate-800">{document.customer}</p>
+                </div>
+              )}
+              {document.sanctionShipPortCode && (
+                <div className="rounded-lg border border-orange-100 bg-white px-4 py-3">
+                  <p className="text-xs font-medium text-orange-400 uppercase tracking-wide mb-1">Col C · รหัสท่าเรือ</p>
+                  <p className="text-base font-mono font-semibold text-slate-700">{document.sanctionShipPortCode}</p>
+                </div>
+              )}
+              {document.sanctionShipPortDest && (
+                <div className="rounded-lg border border-orange-100 bg-white px-4 py-3">
+                  <p className="text-xs font-medium text-orange-400 uppercase tracking-wide mb-1">Col D · ท่าเรือปลายทาง</p>
+                  <p className="text-base font-semibold text-slate-800">{document.sanctionShipPortDest}</p>
+                </div>
+              )}
+              {document.sanctionShipSingleName && (
+                <div className="rounded-lg border border-orange-100 bg-white px-4 py-3 sm:col-span-2">
+                  <p className="text-xs font-medium text-orange-400 uppercase tracking-wide mb-1">Col F · SINGLE STRING NAME (ชื่อเต็ม)</p>
+                  <p className="text-base font-semibold text-slate-800">{document.sanctionShipSingleName}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ── SECTION 7 : ท่าเรวปลายทาง (Col C D E F) ── */}
+        {hasPortDest && (
+          <div className="rounded-xl border border-cyan-200 bg-cyan-50/40 overflow-hidden">
+            <div className="flex items-center gap-2 border-b border-cyan-200 px-5 py-2.5 bg-cyan-100">
+              <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-cyan-600 text-white text-[10px] font-black">P</span>
+              <span className="text-sm font-bold text-cyan-800">ท่าเรือปลายทาง</span>
+              <span className="ml-auto text-xs font-medium text-cyan-600">แหล่งข้อมูล: ท่าเรือปลายทาง</span>
+            </div>
+            <div className="grid grid-cols-2 gap-3 px-5 py-4">
+              {document.portDestType && (
+                <div className="rounded-lg border border-cyan-100 bg-white px-4 py-3">
+                  <p className="text-xs font-medium text-cyan-500 uppercase tracking-wide mb-1">Col C · Type</p>
+                  <p className="text-base font-semibold text-slate-800">{document.portDestType}</p>
+                </div>
+              )}
+              {document.portDestRiskLevel && (
+                <div className="rounded-lg border border-cyan-100 bg-white px-4 py-3">
+                  <p className="text-xs font-medium text-cyan-500 uppercase tracking-wide mb-1">Col D · Risk Level</p>
+                  <p className={`text-base font-bold ${
+                    String(document.portDestRiskLevel).toLowerCase().includes('high') || String(document.portDestRiskLevel).toLowerCase().includes('สูง') ? 'text-red-700' :
+                    String(document.portDestRiskLevel).toLowerCase().includes('medium') || String(document.portDestRiskLevel).toLowerCase().includes('กลาง') ? 'text-amber-700' :
+                    'text-emerald-700'
+                  }`}>{document.portDestRiskLevel}</p>
+                </div>
+              )}
+              {document.portDestFreeze && (
+                <div className="rounded-lg border border-cyan-100 bg-white px-4 py-3">
+                  <p className="text-xs font-medium text-cyan-500 uppercase tracking-wide mb-1">Col E · Freeze</p>
+                  <p className="text-base font-semibold text-slate-800">{document.portDestFreeze}</p>
+                </div>
+              )}
+              {document.portDestCountryCode && (
+                <div className="rounded-lg border border-cyan-100 bg-white px-4 py-3">
+                  <p className="text-xs font-medium text-cyan-500 uppercase tracking-wide mb-1">Col F · รหัสประเทศ</p>
+                  <p className="text-base font-mono font-semibold text-slate-700">{document.portDestCountryCode}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ── SECTION 8 : AI สรุป ── */}
         {(document.summary || document.aiSummary) && document.summary !== descText && (
           <div>
             <button

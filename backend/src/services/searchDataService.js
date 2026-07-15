@@ -278,7 +278,7 @@ const loadDocuments = async () => {
       invoiceNumber: row.invoiceNumber || row.InvoiceNumber || row['Invoice Number'] || '',
       // customer: รองรับทุก Sheet — Buyer Check, CWS, SANCTION, ท่าเรือปลายทาง
       customer: row.customer || row.Customer || row['Customer Name'] ||
-                row['ชื่อลูกค้า'] || row['บริษัท'] || '',
+                row['ชื่อลูกค้า'] || row['บริษัท'] || row['ชื่อบริษัท'] || '',
       amount: Number(row.amount || row.Amount || row['Amount (THB)'] || 0),
       overdueDays: Number(row.overdueDays || row.OverdueDays || row['Overdue Days'] || 0),
       status: row.status || row.Status || row['Status'] ||
@@ -302,6 +302,15 @@ const loadDocuments = async () => {
       ...(row['ชื่อสินค้า (Match Phrases)'] != null && row['ชื่อสินค้า (Match Phrases)'] !== '' && { sanctionProduct: String(row['ชื่อสินค้า (Match Phrases)']) }),
       ...(row['รหัสสินค้า 1'] != null && row['รหัสสินค้า 1'] !== '' && { sanctionCode1: String(row['รหัสสินค้า 1']) }),
       ...(row['รหัสสินค้า 2'] != null && row['รหัสสินค้า 2'] !== '' && { sanctionCode2: String(row['รหัสสินค้า 2']) }),
+      // SANCTION (เรือ): Col A=ลำดับ, Col B=บริษัท(→customer), Col C=รหัสท่าเรือ, Col D=ท่าเรือปลายทาง, Col F=SINGLE STRING NAME
+      ...(row._sheetName === 'SANCTION (เรือ)' && row['รหัสท่าเรือ'] != null && row['รหัสท่าเรือ'] !== '' && { sanctionShipPortCode: String(row['รหัสท่าเรือ']) }),
+      ...(row._sheetName === 'SANCTION (เรือ)' && row['ท่าเรือปลายทาง'] != null && row['ท่าเรือปลายทาง'] !== '' && { sanctionShipPortDest: String(row['ท่าเรือปลายทาง']) }),
+      ...(row._sheetName === 'SANCTION (เรือ)' && row['SINGLE STRING NAME (ชื่อเต็ม)'] != null && row['SINGLE STRING NAME (ชื่อเต็ม)'] !== '' && { sanctionShipSingleName: String(row['SINGLE STRING NAME (ชื่อเต็ม)']) }),
+      // ท่าเรือปลายทาง: Col B=ชื่อบริษัท, Col C=Type, Col D=Risk Level, Col E=Freeze, Col F=รหัสประเทศ
+      ...(row._sheetName === 'ท่าเรือปลายทาง' && row['Type'] != null && row['Type'] !== '' && { portDestType: String(row['Type']) }),
+      ...(row._sheetName === 'ท่าเรือปลายทาง' && row['Risk Level'] != null && row['Risk Level'] !== '' && { portDestRiskLevel: String(row['Risk Level']) }),
+      ...(row._sheetName === 'ท่าเรือปลายทาง' && row['Freeze'] != null && row['Freeze'] !== '' && { portDestFreeze: String(row['Freeze']) }),
+      ...(row._sheetName === 'ท่าเรือปลายทาง' && row['รหัสประเทศ'] != null && row['รหัสประเทศ'] !== '' && { portDestCountryCode: String(row['รหัสประเทศ']) }),
       // CWS: Col A=รหัส, Col B=ชื่อลูกค้า(→customer), Col C=ขนาดธุรกิจ, Col D=วงเงินสะสมรวม, Col E=Credit Warning Sign, Col F=Watch List
       ...(row['ขนาดธุรกิจ'] != null && row['ขนาดธุรกิจ'] !== '' && { cwsBusinessSize: String(row['ขนาดธุรกิจ']) }),
       ...(row['วงเงินสะสมรวม'] != null && row['วงเงินสะสมรวม'] !== '' && { cwsCreditLimit: String(row['วงเงินสะสมรวม']) }),
@@ -335,7 +344,7 @@ const loadDocuments = async () => {
 // Mapping: search field → Excel column names ที่ต้องค้นหา
 const FIELD_COLUMN_MAP = {
   customerCode: ['Cus ID'],                              // Buyer Check Col A เท่านั้น
-  customerName: ['Customer Name', 'ชื่อลูกค้า', 'บริษัท'],  // Col B ทุก sheet
+  customerName: ['Customer Name', 'ชื่อลูกค้า', 'บริษัท', 'ชื่อบริษัท'],  // Col B ทุก sheet
   port:         ['ท่าเรือปลายทาง'],                         // SANCTION (เรือ) Col D
   country:      ['รหัสประเทศ'],                             // ท่าเรือปลายทาง
 };
@@ -360,7 +369,7 @@ const matchField = (rawData, fieldName, value) => {
 };
 
 // Columns ที่เก็บ "ชื่อบริษัท" ใน Excel ทุก Sheet
-const COMPANY_NAME_COLS = ['Customer Name', 'ชื่อลูกค้า', 'บริษัท'];
+const COMPANY_NAME_COLS = ['Customer Name', 'ชื่อลูกค้า', 'บริษัท', 'ชื่อบริษัท'];
 
 // Helper: ดึงชื่อบริษัทจาก rawData
 const extractCompanyName = (rawData) => {
