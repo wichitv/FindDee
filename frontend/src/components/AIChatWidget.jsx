@@ -11,6 +11,7 @@ export default function AIChatWidget() {
   const [session, setSession] = useState(null); // { token, conversationId }
   const [watermark, setWatermark] = useState(null);
   const [sending, setSending] = useState(false);
+  const [thinking, setThinking] = useState(false);
   const [error, setError] = useState(null);
   const [initializing, setInitializing] = useState(false);
   const bottomRef = useRef(null);
@@ -53,6 +54,7 @@ export default function AIChatWidget() {
           { params: { token, watermark: currentWm } }
         );
         if (data.success && data.messages.length > 0) {
+          setThinking(false);
           setMessages(prev => [...prev, ...data.messages.map(m => ({ role: 'bot', text: m.text }))]);
         }
         if (data.watermark) currentWm = data.watermark;
@@ -66,6 +68,7 @@ export default function AIChatWidget() {
     const text = input.trim();
     setInput('');
     setSending(true);
+    setThinking(true);
     setMessages(prev => [...prev, { role: 'user', text }]);
     try {
       const { data } = await axios.post(
@@ -74,6 +77,7 @@ export default function AIChatWidget() {
       );
       if (!data.success) throw new Error(data.error);
     } catch (err) {
+      setThinking(false);
       setMessages(prev => [...prev, { role: 'bot', text: '⚠️ ส่งข้อความไม่สำเร็จ กรุณาลองใหม่' }]);
     } finally {
       setSending(false);
@@ -136,6 +140,16 @@ export default function AIChatWidget() {
                 </span>
               </div>
             ))}
+            {thinking && (
+              <div className="flex justify-start">
+                <span className="flex items-center gap-1 rounded-2xl rounded-bl-sm border border-[#D9E8F7] bg-[#F0F6FD] px-4 py-3">
+                  <span className="h-2 w-2 animate-bounce rounded-full bg-[#034EA2]" style={{ animationDelay: '0ms' }} />
+                  <span className="h-2 w-2 animate-bounce rounded-full bg-[#034EA2]" style={{ animationDelay: '150ms' }} />
+                  <span className="h-2 w-2 animate-bounce rounded-full bg-[#034EA2]" style={{ animationDelay: '300ms' }} />
+                  <span className="ml-1 text-xs text-slate-400">กำลังคิด...</span>
+                </span>
+              </div>
+            )}
             <div ref={bottomRef} />
           </div>
 
