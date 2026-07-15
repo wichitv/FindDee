@@ -311,6 +311,7 @@ const loadDocuments = async () => {
       ...(row._sheetName === 'ท่าเรือปลายทาง' && row['Risk Level'] != null && row['Risk Level'] !== '' && { portDestRiskLevel: String(row['Risk Level']) }),
       ...(row._sheetName === 'ท่าเรือปลายทาง' && row['Freeze'] != null && row['Freeze'] !== '' && { portDestFreeze: String(row['Freeze']) }),
       ...(row._sheetName === 'ท่าเรือปลายทาง' && row['รหัสประเทศ'] != null && row['รหัสประเทศ'] !== '' && { portDestCountryCode: String(row['รหัสประเทศ']) }),
+      ...(row._sheetName === 'ท่าเรือปลายทาง' && row['ประเทศ'] != null && row['ประเทศ'] !== '' && { portDestCountry: String(row['ประเทศ']) }),
       // CWS: Col A=รหัส, Col B=ชื่อลูกค้า(→customer), Col C=ขนาดธุรกิจ, Col D=วงเงินสะสมรวม, Col E=Credit Warning Sign, Col F=Watch List
       ...(row['ขนาดธุรกิจ'] != null && row['ขนาดธุรกิจ'] !== '' && { cwsBusinessSize: String(row['ขนาดธุรกิจ']) }),
       ...(row['วงเงินสะสมรวม'] != null && row['วงเงินสะสมรวม'] !== '' && { cwsCreditLimit: String(row['วงเงินสะสมรวม']) }),
@@ -346,7 +347,7 @@ const FIELD_COLUMN_MAP = {
   customerCode: ['Cus ID'],                              // Buyer Check Col A เท่านั้น
   customerName: ['Customer Name', 'ชื่อลูกค้า', 'บริษัท', 'ชื่อบริษัท'],  // Col B ทุก sheet
   port:         ['ท่าเรือปลายทาง'],                         // SANCTION (เรือ) Col D
-  country:      ['รหัสประเทศ'],                             // ท่าเรือปลายทาง
+  country:      ['รหัสประเทศ', 'ประเทศ'],                  // ท่าเรือปลายทาง Col F, Col G
 };
 
 // Mapping เพิ่มเติม: รหัสลูกค้า CWS (Col A ของ CWS sheet)

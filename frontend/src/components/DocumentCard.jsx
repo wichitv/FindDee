@@ -157,16 +157,6 @@ export default function DocumentCard({ document, onSave, onShare }) {
           )}
         </div>
 
-        {/* ── SECTION 2 : รายละเอียด ── */}
-        {descText && (
-          <div className="rounded-xl border border-slate-100 bg-slate-50 px-5 py-4 space-y-1.5">
-            <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
-              <Info className="w-3.5 h-3.5" />รายละเอียด
-            </p>
-            <p className="text-base leading-relaxed text-slate-700">{descText}</p>
-          </div>
-        )}
-
         {/* ── SECTION 3 : ข้อมูลการเงิน ── */}
         {hasFinancial && (
           <div className="rounded-xl border border-[#D9E8F7] bg-[#F4F9FF] overflow-hidden">
@@ -445,6 +435,12 @@ export default function DocumentCard({ document, onSave, onShare }) {
                 <div className="rounded-lg border border-cyan-100 bg-white px-4 py-3">
                   <p className="text-xs font-medium text-cyan-500 uppercase tracking-wide mb-1">Col F · รหัสประเทศ</p>
                   <p className="text-base font-mono font-semibold text-slate-700">{document.portDestCountryCode}</p>
+                </div>
+              )}
+              {document.portDestCountry && (
+                <div className="rounded-lg border border-cyan-100 bg-white px-4 py-3">
+                  <p className="text-xs font-medium text-cyan-500 uppercase tracking-wide mb-1">Col G · ประเทศ</p>
+                  <p className="text-base font-semibold text-slate-800">{document.portDestCountry}</p>
                 </div>
               )}
             </div>
