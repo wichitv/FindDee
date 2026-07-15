@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 
-// Load environment variables
+// Load environment variables — restart triggered to reload .env
 dotenv.config();
 
 // Import routes
@@ -13,6 +13,7 @@ import collectionRoutes from './routes/collectionRoutes.js';
 import syncRoutes from './routes/syncRoutes.js';
 import aiRoutes from './routes/aiRoutes.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
+import chatRoutes from './routes/chatRoutes.js';
 
 // Create Express app
 const app = express();
@@ -61,6 +62,7 @@ app.use('/api/collections', collectionRoutes);
 app.use('/api/sync', syncRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/chat', chatRoutes);
 
 // 404 handler
 app.use((req, res) => {

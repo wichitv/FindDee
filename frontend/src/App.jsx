@@ -5,6 +5,7 @@ import SyncDashboardPage from './pages/SyncDashboardPage';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import Sidebar from './components/Sidebar';
+import AIChatWidget from './components/AIChatWidget';
 import { getCurrentUser, logout } from './services/authService';
 
 function App() {
@@ -43,6 +44,7 @@ function App() {
             <LandingPage onNavigate={setCurrentPage} user={user} onLogout={handleLogout} />
           )}
         </div>
+        <AIChatWidget />
       </div>
     </React.StrictMode>
   );
