@@ -92,11 +92,11 @@ export default function DocumentCard({ document, onSave, onShare }) {
   const cat = getCategoryStyle();
 
   const hasFinancial = document.creditLimit != null || document.withdrawalAmount != null || document.remainingBalance != null || document.transactionNo != null;
-  const hasBuyer = document._sheetName === 'Buyer Check' || !!(document.buyerList?.length || document.buyerName || document.expiryDate);
+  const hasBuyer = !!(document.buyerList?.length || document.buyerName || document.expiryDate || document.cusId);
   const hasCWS = !!(document.cwsBusinessSize || document.cwsCreditLimit || document.cwsWarningSign || document.cwsWatchList);
-  const hasSanctionGoods = document._sheetName === 'SANCTION (สินค้า)' && !!(document.sanctionType || document.sanctionProduct || document.sanctionCode1 || document.sanctionCode2);
-  const hasPortDest = document._sheetName === 'ท่าเรือปลายทาง' && !!(document.portDestType || document.portDestRiskLevel || document.portDestFreeze || document.portDestCountryCode);
-  const hasSanctionShip = document._sheetName === 'SANCTION (เรือ)';
+  const hasSanctionGoods = !!(document.sanctionType || document.sanctionProduct || document.sanctionCode1 || document.sanctionCode2);
+  const hasPortDest = !!(document.portDestType || document.portDestRiskLevel || document.portDestFreeze || document.portDestCountryCode || document.portDestCountry);
+  const hasSanctionShip = !!(document.sanctionShipPortCode || document.sanctionShipPortDest || document.sanctionShipSingleName);
   const descText = document.description || document.summary || document.content;
 
   return (

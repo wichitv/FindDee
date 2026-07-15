@@ -470,7 +470,48 @@ export const searchDocuments = async (query = '', filters = {}) => {
     }
   });
 
-  return finalResults;
+  // ─── Step 5: Merge per-company rows → one card per company ───────────────────
+  const companyMergeMap = new Map();
+  const mergedResults = [];
+
+  finalResults.forEach((doc) => {
+    const companyKey = (doc.customer || '').toLowerCase().trim() || doc.id;
+    if (!companyMergeMap.has(companyKey)) {
+      companyMergeMap.set(companyKey, mergedResults.length);
+      mergedResults.push({ ...doc });
+      return;
+    }
+    const idx = companyMergeMap.get(companyKey);
+    const base = mergedResults[idx];
+    // Buyer Check
+    if (doc.buyerList?.length) base.buyerList = [...(base.buyerList || []), ...doc.buyerList];
+    if (doc.cusId && !base.cusId) base.cusId = doc.cusId;
+    if (doc.buyerName && !base.buyerName) base.buyerName = doc.buyerName;
+    if (doc.expiryDate && !base.expiryDate) base.expiryDate = doc.expiryDate;
+    // CWS
+    if (doc.cwsBusinessSize && !base.cwsBusinessSize) base.cwsBusinessSize = doc.cwsBusinessSize;
+    if (doc.cwsCreditLimit && !base.cwsCreditLimit) base.cwsCreditLimit = doc.cwsCreditLimit;
+    if (doc.cwsWarningSign && !base.cwsWarningSign) base.cwsWarningSign = doc.cwsWarningSign;
+    if (doc.cwsWatchList && !base.cwsWatchList) base.cwsWatchList = doc.cwsWatchList;
+    // SANCTION (สินค้า)
+    if (doc.sanctionSeq && !base.sanctionSeq) base.sanctionSeq = doc.sanctionSeq;
+    if (doc.sanctionType && !base.sanctionType) base.sanctionType = doc.sanctionType;
+    if (doc.sanctionProduct && !base.sanctionProduct) base.sanctionProduct = doc.sanctionProduct;
+    if (doc.sanctionCode1 && !base.sanctionCode1) base.sanctionCode1 = doc.sanctionCode1;
+    if (doc.sanctionCode2 && !base.sanctionCode2) base.sanctionCode2 = doc.sanctionCode2;
+    // SANCTION (เรือ)
+    if (doc.sanctionShipPortCode && !base.sanctionShipPortCode) base.sanctionShipPortCode = doc.sanctionShipPortCode;
+    if (doc.sanctionShipPortDest && !base.sanctionShipPortDest) base.sanctionShipPortDest = doc.sanctionShipPortDest;
+    if (doc.sanctionShipSingleName && !base.sanctionShipSingleName) base.sanctionShipSingleName = doc.sanctionShipSingleName;
+    // ท่าเรือปลายทาง
+    if (doc.portDestType && !base.portDestType) base.portDestType = doc.portDestType;
+    if (doc.portDestRiskLevel && !base.portDestRiskLevel) base.portDestRiskLevel = doc.portDestRiskLevel;
+    if (doc.portDestFreeze && !base.portDestFreeze) base.portDestFreeze = doc.portDestFreeze;
+    if (doc.portDestCountryCode && !base.portDestCountryCode) base.portDestCountryCode = doc.portDestCountryCode;
+    if (doc.portDestCountry && !base.portDestCountry) base.portDestCountry = doc.portDestCountry;
+  });
+
+  return mergedResults;
 };
 
 export const getTrendingSearches = async () => {
