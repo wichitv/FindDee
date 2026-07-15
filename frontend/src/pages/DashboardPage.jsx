@@ -5,6 +5,22 @@ import {
   TrendingUp, ChevronRight
 } from 'lucide-react';
 
+const FAKE_ASSIGNEES = [
+  { name: 'สมศักดิ์ ใจดี',     color: 'bg-[#D9E8F7] text-[#034EA2]' },
+  { name: 'วิชีรพงศ์ สวัสดิ์',  color: 'bg-purple-100 text-purple-700' },
+  { name: 'นภัสร ทองใส',    color: 'bg-emerald-100 text-emerald-700' },
+  { name: 'ปรียาภรณ์ มีสุข',   color: 'bg-amber-100 text-amber-700' },
+  { name: 'ธนนันท์ สุขใจ',    color: 'bg-red-100 text-red-700' },
+  { name: 'กัญญา บุญยิ่ง',     color: 'bg-cyan-100 text-cyan-700' },
+  { name: 'อรรถพร สว่าง',    color: 'bg-pink-100 text-pink-700' },
+  { name: 'ชนันท์ รักการ',   color: 'bg-indigo-100 text-indigo-700' },
+];
+
+const getAssignee = (id) => {
+  const seed = String(id || '').split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
+  return FAKE_ASSIGNEES[seed % FAKE_ASSIGNEES.length];
+};
+
 const STATUS_LABEL = {
   New: 'งานเข้า',
   Pending: 'รอดำเนินการ',
@@ -22,11 +38,11 @@ const STATUS_COLOR = {
 };
 
 const TABS = [
-  { key: 'all',       label: 'รายการทั้งหมด', icon: LayoutList,     color: 'text-slate-600',  bg: 'bg-slate-50',  border: 'border-slate-200' },
-  { key: 'incoming',  label: 'งานเข้า',        icon: Inbox,          color: 'text-[#034EA2]',  bg: 'bg-[#EBF2FA]',  border: 'border-[#B0CEEE]'  },
-  { key: 'pending',   label: 'รอดำเนินการ',   icon: Clock,          color: 'text-amber-600',  bg: 'bg-amber-50',  border: 'border-amber-200' },
-  { key: 'completed', label: 'ดำเนินการเสร็จ', icon: CheckCircle,    color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200' },
-  { key: 'nearDue',   label: 'ใกล้ครบกำหนด',  icon: AlertTriangle,  color: 'text-red-600',    bg: 'bg-red-50',    border: 'border-red-200'   },
+  { key: 'all',       label: 'รายการทั้งหมด',    icon: LayoutList,    color: 'text-slate-600',   bg: 'bg-slate-50',   border: 'border-slate-200'   },
+  { key: 'incoming',  label: 'Buyer Check',       icon: Inbox,         color: 'text-[#034EA2]',   bg: 'bg-[#EBF2FA]',  border: 'border-[#B0CEEE]'   },
+  { key: 'pending',   label: 'CWS',               icon: Clock,         color: 'text-amber-600',   bg: 'bg-amber-50',   border: 'border-amber-200'   },
+  { key: 'completed', label: 'ท่าเรือปลายทาง',    icon: CheckCircle,   color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200' },
+  { key: 'nearDue',   label: 'SANCTION',          icon: AlertTriangle, color: 'text-red-600',     bg: 'bg-red-50',     border: 'border-red-200'     },
 ];
 
 const formatAmount = (n) =>
@@ -50,11 +66,11 @@ export default function DashboardPage() {
   const rows = items[activeTab] || [];
 
   const statCards = [
-    { key: 'total',     label: 'รายการทั้งหมด',  value: stats.total,     icon: LayoutList,    color: 'bg-slate-50  border-slate-200  text-slate-700',  iconColor: 'text-slate-500'  },
-    { key: 'incoming',  label: 'งานเข้า',          value: stats.incoming,  icon: Inbox,         color: 'bg-[#EBF2FA] border-[#B0CEEE] text-[#034EA2]',  iconColor: 'text-[#034EA2]'  },
-    { key: 'pending',   label: 'รอดำเนินการ',     value: stats.pending,   icon: Clock,         color: 'bg-amber-50  border-amber-200  text-amber-700',  iconColor: 'text-amber-500'  },
-    { key: 'completed', label: 'ดำเนินการเสร็จ',  value: stats.completed, icon: CheckCircle,   color: 'bg-emerald-50 border-emerald-200 text-emerald-700', iconColor: 'text-emerald-500' },
-    { key: 'nearDue',   label: 'ใกล้ครบกำหนด',   value: stats.nearDue,   icon: AlertTriangle, color: 'bg-red-50    border-red-200    text-red-700',    iconColor: 'text-red-500'    },
+    { key: 'total',     label: 'รายการทั้งหมด',  value: stats.total,     icon: LayoutList,    color: 'bg-slate-50  border-slate-200  text-slate-700',   iconColor: 'text-slate-500'   },
+    { key: 'incoming',  label: 'Buyer Check',    value: stats.incoming,  icon: Inbox,         color: 'bg-[#EBF2FA] border-[#B0CEEE] text-[#034EA2]',   iconColor: 'text-[#034EA2]'   },
+    { key: 'pending',   label: 'CWS',            value: stats.pending,   icon: Clock,         color: 'bg-amber-50  border-amber-200  text-amber-700',   iconColor: 'text-amber-500'   },
+    { key: 'completed', label: 'ท่าเรือปลายทาง', value: stats.completed, icon: CheckCircle,   color: 'bg-emerald-50 border-emerald-200 text-emerald-700', iconColor: 'text-emerald-500' },
+    { key: 'nearDue',   label: 'SANCTION',       value: stats.nearDue,   icon: AlertTriangle, color: 'bg-red-50    border-red-200    text-red-700',     iconColor: 'text-red-500'     },
   ];
 
   return (
@@ -151,8 +167,12 @@ export default function DashboardPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-50">
-                    {rows.map((item) => (
-                      <tr key={item.id} className="transition hover:bg-[#EBF2FA]/40">
+                    {rows.map((item, idx) => {
+                      const assignee = item.assignee
+                        ? { name: item.assignee, color: 'bg-[#D9E8F7] text-[#034EA2]' }
+                        : getAssignee(item.id || idx);
+                      return (
+                      <tr key={item.id || idx} className="transition hover:bg-[#EBF2FA]/40">
                         <td className="px-5 py-3.5 font-semibold text-[#034EA2]">{item.invoiceNumber}</td>
                         <td className="px-5 py-3.5 text-slate-700">{item.customer}</td>
                         <td className="px-5 py-3.5 text-right font-medium text-slate-800">
@@ -169,14 +189,15 @@ export default function DashboardPage() {
                         </td>
                         <td className="px-5 py-3.5">
                           <div className="flex items-center gap-2">
-                            <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-[#D9E8F7] text-xs font-bold text-[#034EA2]">
-                              {item.assignee ? item.assignee.charAt(0) : '?'}
+                            <div className={`flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold ${assignee.color}`}>
+                              {assignee.name.charAt(0)}
                             </div>
-                            <span className="text-slate-600">{item.assignee || '—'}</span>
+                            <span className="text-slate-600">{assignee.name}</span>
                           </div>
                         </td>
                       </tr>
-                    ))}
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

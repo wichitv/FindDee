@@ -3,6 +3,27 @@
  */
 
 import { buildAutoSummary, buildAggregationSummary } from './summaryService.js';
+import { searchDocuments } from './searchDataService.js';
+
+// Map Excel document → format ที่ SmartSummaryTable ต้องการ
+const docToRow = (doc, sourceName) => ({
+  source: sourceName,
+  type:   doc._sheetName || sourceName,
+  customer: doc.customer || doc.title || '',
+  status: doc.status || doc.cwsWarningSign || '',
+  detail: doc.summary || doc.description || '',
+  amount: doc.amount || 0,
+  overdueDays: doc.overdueDays || 0,
+  // เก็บ field พิเศษตาม sheet
+  cusId:      doc.cusId,
+  buyerName:  doc.buyerName,
+  expiryDate: doc.expiryDate,
+  cwsWarningSign: doc.cwsWarningSign,
+  cwsWatchList:   doc.cwsWatchList,
+  sanctionType:   doc.sanctionType,
+  sanctionProduct: doc.sanctionProduct,
+  portDestRiskLevel: doc.portDestRiskLevel,
+});
 
 class SyncService {
   constructor() {
@@ -80,31 +101,32 @@ class SyncService {
         }
       };
 
-      await pullSource('saction', 'Sanction', async () => [
-        { source: 'Saction', type: 'Watchlist', customer: 'ABC Corp', status: 'High Risk', detail: 'Listed in restricted party database' },
-        { source: 'Saction', type: 'Watchlist', customer: 'XYZ Ltd', status: 'Medium Risk', detail: 'Name match review required' }
-      ]);
+      // ดึงข้อมูลจริงจาก Excel/OneDrive ครั้งเดียว แล้ว filter ตาม sheet
+      let allDocs = [];
+      try {
+        allDocs = await searchDocuments('', {});
+        syncOp.logs.push(`[PULL] ✓ Loaded ${allDocs.length} documents from data source`);
+      } catch (err) {
+        syncOp.logs.push(`[PULL] ⚠️ Could not load data source: ${err.message}`);
+      }
 
-      await pullSource('buyerCheck', 'Buyer Check', async () => [
-        { source: 'Buyer check', type: 'Buyer', customer: 'DEF Trading', status: 'Verified', detail: 'Buyer profile complete' },
-        { source: 'Buyer check', type: 'Buyer', customer: 'GHI Co.', status: 'Needs Review', detail: 'Missing registration number' }
-      ]);
+      await pullSource('saction', 'Sanction', async () =>
+        allDocs.filter(d => (d._sheetName || '').includes('SANCTION')).map(d => docToRow(d, 'Sanction'))
+      );
 
-      await pullSource('cws', 'CWS', async () => [
-        { source: 'CWS', type: 'Credit', customer: 'JKL Finance', status: 'Active Credit', detail: 'Loan status healthy' }
-      ]);
+      await pullSource('buyerCheck', 'Buyer Check', async () =>
+        allDocs.filter(d => d._sheetName === 'Buyer Check').map(d => docToRow(d, 'Buyer Check'))
+      );
 
-      await pullSource('amlo', 'AMLO', async () => [
-        { source: 'AMLO', type: 'AML', customer: 'MNO Holdings', status: 'Flagged', detail: 'Transaction pattern anomaly' }
-      ]);
+      await pullSource('cws', 'CWS', async () =>
+        allDocs.filter(d => d._sheetName === 'CWS').map(d => docToRow(d, 'CWS'))
+      );
 
-      await pullSource('tdr', 'TDR', async () => [
-        { source: 'TDR', type: 'Duplicate Document', documentNo: 'DOC-1001', status: 'Duplicate', detail: 'Document number already exists' }
-      ]);
+      await pullSource('amlo', 'AMLO', async () => []);
 
-      await pullSource('as400', 'AS400', async () => [
-        { source: 'AS400', type: 'Duplicate Ticket', ticketNo: 'TKT-9001', documentNo: 'DOC-9001', status: 'Duplicate', detail: 'Ticket and document already used' }
-      ]);
+      await pullSource('tdr', 'TDR', async () => []);
+
+      await pullSource('as400', 'AS400', async () => []);
 
       syncOp.pulledData = pulledData;
       syncOp.progress = 33;
