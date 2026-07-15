@@ -2,14 +2,20 @@ import { useState } from 'react';
 import { Search, X } from 'lucide-react';
 import PropTypes from 'prop-types';
 
-const EMPTY_VALUES = { customerCode: '', customerName: '', port: '', country: '' };
+const EMPTY_VALUES = { customerCode: '', customerName: '', buyerName: '', port: '', country: '' };
 
-const FIELDS = [
+const ROW1_FIELDS = [
   { key: 'customerCode', label: 'รหัสลูกค้า', placeholder: 'เช่น CUS-0001' },
   { key: 'customerName', label: 'ชื่อลูกค้า', placeholder: 'เช่น ABC Corporation' },
+  { key: 'buyerName', label: 'Buyer Name', placeholder: 'เช่น John Smith หรือ XYZ Buyer' },
+];
+
+const ROW2_FIELDS = [
   { key: 'port', label: 'รหัสท่าเรือ / ชื่อท่าเรือ', placeholder: 'เช่น THBKK หรือ Bangkok Port' },
   { key: 'country', label: 'ประเทศ / รหัสประเทศ / เมือง', placeholder: 'เช่น TH, Thailand, กรุงเทพ' },
 ];
+
+const FIELDS = [...ROW1_FIELDS, ...ROW2_FIELDS];
 
 export default function SearchForm({ onSearch, isLoading }) {
   const [values, setValues] = useState(EMPTY_VALUES);
@@ -40,31 +46,59 @@ export default function SearchForm({ onSearch, isLoading }) {
   return (
     <form onSubmit={handleSubmit} noValidate className="w-full">
       <div className="rounded-2xl border border-[#B0CEEE] bg-white/95 p-6 shadow-[0_18px_55px_rgba(3,78,162,0.1)] ring-1 ring-[#F0F6FD] transition focus-within:border-[#034EA2] focus-within:shadow-[0_20px_60px_rgba(3,78,162,0.15)]">
-        <div className="grid gap-4 sm:grid-cols-2">
-          {FIELDS.map(({ key, label, placeholder }) => (
-            <div key={key}>
-              <label htmlFor={key} className="mb-1.5 block text-sm font-medium text-slate-700">
-                {label}
-              </label>
-              <input
-                id={key}
-                type="text"
-                value={values[key]}
-                onChange={handleChange(key)}
-                onBlur={handleBlur(key)}
-                placeholder={placeholder}
-                disabled={isLoading}
-                className={`w-full rounded-xl border px-4 py-2.5 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:ring-2 disabled:bg-slate-50 disabled:text-slate-400 ${
-                  isInvalid(key)
-                    ? 'border-red-400 bg-red-50/30 focus:border-red-400 focus:ring-red-100'
-                    : 'border-[#B0CEEE] focus:border-[#034EA2] focus:ring-[#034EA2]/10'
-                }`}
-              />
-              {isInvalid(key) && (
-                <p className="mt-1 text-xs text-red-500">กรุณากรอก{label}</p>
-              )}
-            </div>
-          ))}
+        <div className="flex flex-col gap-4">
+          <div className="grid gap-4 sm:grid-cols-3">
+            {ROW1_FIELDS.map(({ key, label, placeholder }) => (
+              <div key={key}>
+                <label htmlFor={key} className="mb-1.5 block text-sm font-medium text-slate-700">
+                  {label}
+                </label>
+                <input
+                  id={key}
+                  type="text"
+                  value={values[key]}
+                  onChange={handleChange(key)}
+                  onBlur={handleBlur(key)}
+                  placeholder={placeholder}
+                  disabled={isLoading}
+                  className={`w-full rounded-xl border px-4 py-2.5 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:ring-2 disabled:bg-slate-50 disabled:text-slate-400 ${
+                    isInvalid(key)
+                      ? 'border-red-400 bg-red-50/30 focus:border-red-400 focus:ring-red-100'
+                      : 'border-[#B0CEEE] focus:border-[#034EA2] focus:ring-[#034EA2]/10'
+                  }`}
+                />
+                {isInvalid(key) && (
+                  <p className="mt-1 text-xs text-red-500">กรุณากรอก{label}</p>
+                )}
+              </div>
+            ))}
+          </div>
+          <div className="grid gap-4 sm:grid-cols-3">
+            {ROW2_FIELDS.map(({ key, label, placeholder }) => (
+              <div key={key} className={key === 'country' ? 'sm:col-span-2' : ''}>
+                <label htmlFor={key} className="mb-1.5 block text-sm font-medium text-slate-700">
+                  {label}
+                </label>
+                <input
+                  id={key}
+                  type="text"
+                  value={values[key]}
+                  onChange={handleChange(key)}
+                  onBlur={handleBlur(key)}
+                  placeholder={placeholder}
+                  disabled={isLoading}
+                  className={`w-full rounded-xl border px-4 py-2.5 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:ring-2 disabled:bg-slate-50 disabled:text-slate-400 ${
+                    isInvalid(key)
+                      ? 'border-red-400 bg-red-50/30 focus:border-red-400 focus:ring-red-100'
+                      : 'border-[#B0CEEE] focus:border-[#034EA2] focus:ring-[#034EA2]/10'
+                  }`}
+                />
+                {isInvalid(key) && (
+                  <p className="mt-1 text-xs text-red-500">กรุณากรอก{label}</p>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
 
         <div className="mt-5 flex items-center justify-end gap-3">

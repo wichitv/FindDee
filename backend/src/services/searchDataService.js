@@ -346,7 +346,8 @@ const loadDocuments = async () => {
 const FIELD_COLUMN_MAP = {
   customerCode: ['Cus ID'],                              // Buyer Check Col A เท่านั้น
   customerName: ['Customer Name', 'ชื่อลูกค้า', 'บริษัท', 'ชื่อบริษัท'],  // Col B ทุก sheet
-  port:         ['ท่าเรือปลายทาง'],                         // SANCTION (เรือ) Col D
+  buyerName:    ['Buyer Name'],                           // Buyer Check Col C
+  port:         ['รหัสท่าเรือ', 'ท่าเรือปลายทาง'],         // SANCTION (เรือ) Col C (รหัส) และ Col D (ชื่อ)
   country:      ['รหัสประเทศ', 'ประเทศ'],                  // ท่าเรือปลายทาง Col F, Col G
 };
 
@@ -386,14 +387,14 @@ export const searchDocuments = async (query = '', filters = {}) => {
   const docs = await loadDocuments();
 
   // แยก field filters ออกจาก generic filters
-  const { customerCode, customerName, port, country, source: filterSource, status: filterStatus, ...otherFilters } = filters;
+  const { customerCode, customerName, buyerName, port, country, source: filterSource, status: filterStatus, ...otherFilters } = filters;
 
   // ─── Step 1: หา direct matches ───────────────────────────────────────────────
   const directMatches = docs.filter((doc) => {
     const haystack = doc._allText || '';
     const matchesQuery = !normalizedQuery || haystack.includes(normalizedQuery);
 
-    const hasFieldFilter = customerCode || customerName || port || country;
+    const hasFieldFilter = customerCode || customerName || buyerName || port || country;
     let matchesFields = true;
     if (hasFieldFilter) {
       // customerCode ค้นหา Buyer Check Col A (Cus ID) และ CWS Col A (รหัส) แยกกัน
@@ -410,6 +411,7 @@ export const searchDocuments = async (query = '', filters = {}) => {
       matchesFields = (
         matchesCusId || matchesCwsCode ||
         (customerName ? matchField(doc._rawData, 'customerName', customerName) : false) ||
+        (buyerName    ? matchField(doc._rawData, 'buyerName',    buyerName)    : false) ||
         (port         ? matchField(doc._rawData, 'port',         port)         : false) ||
         (country      ? matchField(doc._rawData, 'country',      country)      : false)
       );
@@ -429,8 +431,11 @@ export const searchDocuments = async (query = '', filters = {}) => {
   });
 
   // ─── Step 3: ค้นหาข้อมูลบริษัทเดียวกันจากทุก Sheet ─────────────────────────
+  // ★ ถ้าค้นเฉพาะ buyerName (ไม่มี field อื่น) → ไม่ expand ไป sheet อื่น
+  //    เพื่อคืนเฉพาะข้อมูล Buyer Check Column C
+  const onlyBuyerNameSearch = buyerName && !customerCode && !customerName && !port && !country && !normalizedQuery;
   let allResults = [...directMatches];
-  if (companyNames.size > 0) {
+  if (companyNames.size > 0 && !onlyBuyerNameSearch) {
     const seenIds = new Set(directMatches.map(d => d.id));
     docs.forEach(doc => {
       if (seenIds.has(doc.id)) return;
