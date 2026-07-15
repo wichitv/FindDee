@@ -1,7 +1,6 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback } from 'react';
 import Footer from '../components/Footer';
 import SearchForm from '../components/SearchForm';
-import FilterPanel from '../components/FilterPanel';
 import DocumentCard from '../components/DocumentCard';
 import LoadingState from '../components/LoadingState';
 import ErrorState from '../components/ErrorState';
@@ -11,21 +10,13 @@ import { useSearch } from '../hooks/useSearch';
 
 export default function SearchPage({ onNavigate, user, onLogout }) {
   const { results, loading, error, totalResults, search } = useSearch();
-  const [filters, setFilters] = useState({});
   const [lastQuery, setLastQuery] = useState(null);
   const [isAISummaryOpen, setIsAISummaryOpen] = useState(false);
 
   const handleSearch = useCallback((queryObj) => {
     setLastQuery(queryObj);
-    search(queryObj, filters);
-  }, [search, filters]);
-
-  const handleFilterChange = useCallback((newFilters) => {
-    setFilters(newFilters);
-    if (lastQuery) {
-      search(lastQuery, newFilters);
-    }
-  }, [search, lastQuery]);
+    search(queryObj);
+  }, [search]);
 
   const handleSaveDocument = (document) => {
     console.log('Saving document:', document);
@@ -41,34 +32,7 @@ export default function SearchPage({ onNavigate, user, onLogout }) {
     }
   };
 
-  const filteredResults = useMemo(() => {
-    const activeSources = filters.source || [];
-    if (activeSources.length === 0) return results;
-    return results.filter(doc =>
-      activeSources.some(src => {
-        switch (src) {
-          case 'sanction':
-            return !!(doc.sanctionType || doc.sanctionProduct || doc.sanctionCode1 ||
-                      doc.sanctionShipPortCode || doc.sanctionShipPortDest);
-          case 'buyer_check':
-            return !!(doc.buyerList?.length || doc.cusId || doc.buyerName);
-          case 'cws':
-            return !!(doc.cwsBusinessSize || doc.cwsCreditLimit || doc.cwsWarningSign || doc.cwsWatchList);
-          case 'amlo':
-            return (doc.source || '').toLowerCase().includes('amlo') ||
-                   (doc._sheetName || '').toLowerCase().includes('amlo');
-          case 'tdr':
-            return (doc.source || '').toLowerCase().includes('tdr') ||
-                   (doc._sheetName || '').toLowerCase().includes('tdr');
-          case 'aa400':
-            return (doc.source || '').toLowerCase().includes('aa400') ||
-                   (doc._sheetName || '').toLowerCase().includes('as400');
-          default:
-            return false;
-        }
-      })
-    );
-  }, [results, filters.source]);
+  const filteredResults = results;
 
   return (
     <div className="flex min-h-screen flex-col bg-white">
@@ -105,21 +69,11 @@ export default function SearchPage({ onNavigate, user, onLogout }) {
             )}
 
             {lastQuery && (
-              <div className="grid gap-6 lg:grid-cols-4">
-                <div className="lg:col-span-1">
-                  <div className="sticky top-20">
-                    <FilterPanel onFilterChange={handleFilterChange} />
-                  </div>
-                </div>
-
-                <div className="lg:col-span-3">
+              <div>
                   {!loading && results.length > 0 && (
                     <div className="mb-6 flex items-center justify-between gap-4 rounded-2xl border border-[#D9E8F7] bg-[#EBF2FA]/70 p-4 shadow-sm">
                       <p className="text-sm text-slate-700">
-                        พบ <span className="font-semibold">{filteredResults.length}</span>
-                        {filteredResults.length !== totalResults && (
-                          <span className="text-slate-400"> (กรองแล้วจาก {totalResults})</span>
-                        )}
+                        พบ <span className="font-semibold">{results.length}</span>
                         {' '}ผลลัพธ์สำหรับ{' '}
                         <span className="font-semibold text-[#034EA2]">{lastQuery?.customerName || lastQuery?.customerCode || ''}</span>
                       </p>
@@ -140,13 +94,9 @@ export default function SearchPage({ onNavigate, user, onLogout }) {
                     <EmptyState message="ไม่พบผลลัพธ์" suggestion={`ไม่พบผลลัพธ์สำหรับ "${lastQuery?.customerName || lastQuery?.customerCode || ''}". ลองใช้คำค้นหาอื่นหรือปรับเปลี่ยนตัวกรอง`} />
                   )}
 
-                  {!loading && filteredResults.length === 0 && results.length > 0 && (
-                    <EmptyState message="ไม่พบผลลัพธ์ที่ตรงกับตัวกรอง" suggestion="ลองเปลี่ยนแหล่งข้อมูลที่เลือกในตัวกรอง" />
-                  )}
-
-                  {!loading && filteredResults.length > 0 && (
+                  {!loading && results.length > 0 && (
                     <div className="grid gap-6">
-                      {filteredResults.map((doc, index) => (
+                      {results.map((doc, index) => (
                         <DocumentCard key={doc.id || index} document={doc} onSave={handleSaveDocument} onShare={handleShareDocument} />
                       ))}
                     </div>
@@ -160,7 +110,6 @@ export default function SearchPage({ onNavigate, user, onLogout }) {
                       </button>
                     </div>
                   )}
-                </div>
               </div>
             )}
           </div>

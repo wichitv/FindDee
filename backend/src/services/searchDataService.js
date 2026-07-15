@@ -458,18 +458,24 @@ export const searchDocuments = async (query = '', filters = {}) => {
     }
     // Buyer Check: group by cusId (fallback to customer name)
     const key = doc.cusId || doc.customer || doc.id;
+
+    // ถ้ามี buyerName filter → แสดงเฉพาะ buyer ที่ตรงกับคำค้นหา
+    const buyerNameNeedle = buyerName ? String(buyerName).trim().toLowerCase() : null;
+    const docBuyerMatches = !buyerNameNeedle ||
+      String(doc.buyerName || '').toLowerCase().includes(buyerNameNeedle);
+
     if (!buyerCheckMap.has(key)) {
       const merged = { ...doc, buyerList: [] };
-      // เพิ่ม buyer ตัวแรกเข้า list
-      if (doc.buyerName || doc.expiryDate) {
+      // เพิ่ม buyer ตัวแรกเข้า list (เฉพาะที่ตรง filter)
+      if ((doc.buyerName || doc.expiryDate) && docBuyerMatches) {
         merged.buyerList.push({ buyerName: doc.buyerName || '', expiryDate: doc.expiryDate || '' });
       }
       buyerCheckMap.set(key, finalResults.length);
       finalResults.push(merged);
     } else {
-      // เพิ่ม buyer เพิ่มเติมเข้า list ของ card เดิม
+      // เพิ่ม buyer เพิ่มเติมเข้า list ของ card เดิม (เฉพาะที่ตรง filter)
       const idx = buyerCheckMap.get(key);
-      if (doc.buyerName || doc.expiryDate) {
+      if ((doc.buyerName || doc.expiryDate) && docBuyerMatches) {
         finalResults[idx].buyerList.push({ buyerName: doc.buyerName || '', expiryDate: doc.expiryDate || '' });
       }
     }
