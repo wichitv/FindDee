@@ -321,10 +321,17 @@ export default function DocumentCard({ document, onSave, onShare }) {
               {document.cwsWatchList && (
                 <div className="rounded-lg border border-emerald-100 bg-white px-4 py-3 sm:col-span-2">
                   <p className="text-xs font-medium text-emerald-500 uppercase tracking-wide mb-1">Col F · Watch List</p>
-                  <p className={`text-sm font-medium leading-relaxed ${
-                    String(document.cwsWatchList).includes('ไม่ปรากฎ') || String(document.cwsWatchList).includes('ไม่ปรากฏ')
-                      ? 'text-emerald-700' : 'text-amber-700'
-                  }`}>{document.cwsWatchList}</p>
+                  {String(document.cwsWatchList).includes('ไม่ปรากฎ') || String(document.cwsWatchList).includes('ไม่ปรากฏ') ? (
+                    <p className="text-sm font-medium leading-relaxed text-emerald-700">{document.cwsWatchList}</p>
+                  ) : (
+                    <div className="mt-1 flex items-center gap-2 rounded-lg border border-amber-300 bg-amber-50 px-4 py-2.5">
+                      <span className="text-xl">⚠️</span>
+                      <div>
+                        <p className="text-sm font-bold text-amber-800">ตรวจพบ Watch List</p>
+                        <p className="text-xs text-amber-600">{document.cwsWatchList}</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

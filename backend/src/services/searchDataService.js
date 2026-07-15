@@ -567,12 +567,6 @@ export const buildSourceTrace = (doc) => {
       sourceLabel: 'TDR',
       result: 'ไม่พบเอกสารซ้ำ',
       severity: 'safe'
-    },
-    {
-      label: 'AS400',
-      sourceLabel: 'AS400',
-      result: 'ไม่พบ Ticket ซ้ำ',
-      severity: 'safe'
     }
   ];
 };
