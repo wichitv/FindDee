@@ -77,12 +77,6 @@ export default function SearchPage({ onNavigate, user, onLogout }) {
                         {' '}ผลลัพธ์สำหรับ{' '}
                         <span className="font-semibold text-[#034EA2]">{lastQuery?.customerName || lastQuery?.customerCode || ''}</span>
                       </p>
-                      <button
-                        onClick={() => setIsAISummaryOpen(true)}
-                        className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-[#034EA2] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#154194] active:scale-95"
-                      >
-                        🤖 AI สรุปผล
-                      </button>
                     </div>
                   )}
 
