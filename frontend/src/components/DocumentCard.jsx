@@ -1,5 +1,5 @@
-import { Bookmark, Share2, FileText, Calendar, Globe, BadgeDollarSign, CreditCard, User, AlertTriangle, Info, ChevronDown, ChevronRight } from 'lucide-react';
-import { useState } from 'react';
+import { Bookmark, Share2, FileText, Calendar, Globe, BadgeDollarSign, CreditCard, User, AlertTriangle, Info, ChevronDown, ChevronRight, Download } from 'lucide-react';
+import { useState, useRef } from 'react';
 import searchService from '../services/searchService';
 
 const getDocumentStatus = (doc) => {
@@ -31,6 +31,7 @@ const StatusBadge = ({ doc }) => {
 };
 
 export default function DocumentCard({ document, onSave, onShare }) {
+  const cardRef = useRef(null);
   const [isSaved, setIsSaved] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const [showSourceTrace, setShowSourceTrace] = useState(false);
@@ -58,6 +59,30 @@ export default function DocumentCard({ document, onSave, onShare }) {
     onSave?.(document);
     setIsSaved(true);
     setTimeout(() => setIsSaved(false), 2000);
+  };
+
+  const handleDownloadPDF = () => {
+    const cardElement = cardRef.current;
+    const linkTags = Array.from(window.document.head.querySelectorAll('link[rel="stylesheet"]'))
+      .map(l => l.outerHTML).join('\n');
+    const styleTags = Array.from(window.document.head.querySelectorAll('style'))
+      .map(s => s.outerHTML).join('\n');
+    const title = document.customer || document.title || 'FindDee';
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`<!DOCTYPE html>
+<html><head>
+  <meta charset="UTF-8">
+  <title>${title} - FindDee Report</title>
+  ${linkTags}\n  ${styleTags}
+  <style>
+    body { padding: 24px; background: white; font-family: 'Sarabun', sans-serif; }
+    button, [role="button"] { display: none !important; }
+    @page { margin: 12mm; size: A4 portrait; }
+  </style>
+</head>
+<body><div class="max-w-3xl mx-auto">${cardElement.outerHTML}</div></body></html>`);
+    printWindow.document.close();
+    setTimeout(() => { printWindow.focus(); printWindow.print(); }, 800);
   };
 
   const handleShare = () => {
@@ -100,7 +125,7 @@ export default function DocumentCard({ document, onSave, onShare }) {
   const descText = document.description || document.summary || document.content;
 
   return (
-    <div className="bg-white border border-[#D9E8F7]/60 rounded-2xl shadow-md hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 overflow-hidden">
+    <div ref={cardRef} className="bg-white border border-[#D9E8F7]/60 rounded-2xl shadow-md hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 overflow-hidden">
 
       {/* ── Top color bar by category ── */}
       <div className={`h-1.5 w-full ${cat.dot}`} />
@@ -538,6 +563,14 @@ export default function DocumentCard({ document, onSave, onShare }) {
           >
             <Share2 className="w-4 h-4" />
             แชร์
+          </button>
+
+          <button
+            onClick={handleDownloadPDF}
+            className="flex-1 px-4 py-2.5 bg-blue-50 text-[#034EA2] border border-[#D9E8F7] rounded-xl font-medium hover:bg-[#D9E8F7] transition-all flex items-center justify-center gap-2 text-sm"
+          >
+            <Download className="w-4 h-4" />
+            PDF
           </button>
 
           {document.url && (
